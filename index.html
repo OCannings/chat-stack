@@ -1,0 +1,31 @@
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+
+Handle: <input type="text" id="handle" name="handle" /><br/><br />
+<textarea name="history" id="history" cols="37" rows="8"/></textarea><br />
+<input type="text" id="message" name="message" />
+<input id="submit" type="submit" name="submit" value="Send" /><br />
+
+<script>
+  var socket = io.connect('http://localhost');
+  socket.on('message', function (data) {
+    console.log(data);
+    $('#history').val($('#history').val()+data.handle+": "+data.message+"\n");
+  });
+  
+  function sendMessage() {
+    socket.emit("message", {handle: $('#handle').val(), message: $('#message').val()});
+    $('#message').val("");
+  }
+  $('#handle').val("User "+Math.round(Math.random()*10000))
+  $('#submit').click(sendMessage);
+  
+  $(document).keypress(function(e) {
+    if(e.keyCode == 13) {
+        sendMessage();
+    }
+  });
+
+  
+</script>
