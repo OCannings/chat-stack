@@ -18,15 +18,50 @@ hbs.registerHelper("css", function(url) {
 
 
 app.get('/', function (req, res) {
+ 
+  var room_id = req.query.room_id;
 
-  res.render("index", {});
+  res.render("index", {
+    room_id: room_id
+  });
 
 });
 
 var sockets = [];
+var rooms = {};
+
+function getRoom(room_id) {
+  if (!rooms["room_"+room_id]) {
+    rooms["room_"+room_id] = {
+      sockets: []
+    };
+  }
+  return rooms["room_"+room_id];
+}
+
+function addSocket(room_id, socket) {
+  var room = getRoom(room_id);
+  room.sockets.push(socket);
+}
+
+function getRoomBySocket(socket) {
+  for (var i in rooms) {
+    for (var j=0;j<rooms[i].sockets.length;j++) {
+      if (rooms[i].sockets[j] === socket) {
+        return i;
+      }
+    }
+  }
+}
+
 io.sockets.on('connection', function (socket) {
-  sockets.push(socket);
+
+  socket.on('join_room', function(data) {
+    addSocket(data.room_id, socket);
+  });
+
   socket.on('message', function (data) {
+    var sockets = rooms[getRoomBySocket(socket)].sockets;
     for (var i=0;i<sockets.length;i++) {
       sockets[i].emit('message', data);
     }
